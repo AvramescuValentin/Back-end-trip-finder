@@ -1,19 +1,22 @@
 {
-  "name": "back-end-trip-finder",
+  "name": "tripfinder-back-end",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AvramescuValentin/Back-end-trip-finder.git"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/AvramescuValentin/Back-end-trip-finder/issues"
-  },
-  "homepage": "https://github.com/AvramescuValentin/Back-end-trip-finder#readme"
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.10.0",
+    "mongoose": "^5.12.3",
+    "mongoose-unique-validator": "^2.0.3",
+    "nodemon": "^2.0.7",
+    "uuid": "^8.3.2"
+  }
 }
