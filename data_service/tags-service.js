@@ -16,18 +16,19 @@ const searchCreateTags = async (obj, target, sess) => { // obj is an array of st
     //     throw "User not found!";
     // }
     try {
-        for (let i = 0; i < obj.length; i++) {
-            let tag = await Tags.findOne({value: obj[i]});
+        obj.forEach(async (element) => {
+            const tag = await Tags.findOne({ value: element });
             if (!tag) {
                 const newTag = new Tags({
-                    value:obj[i]
-                })
-                await newTag.save({session:sess});
+                    value: element
+                });
+                await newTag.save({ session: sess });
                 target.tags.push(newTag);
-            } else {
+            }
+            else {
                 target.tags.push(tag);
             }
-        }
+        });
     } catch (err) {
         throw "Could not add tags to user";
     }

@@ -1,4 +1,4 @@
-const {validationResult} = require('express-validator');
+const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
 const HttpError = require('../models/http-error');
@@ -15,15 +15,15 @@ const getUsers = async (req, res, next) => {
     const regex = new RegExp(name, 'i');
     let users;
     try {
-        const lastNameResults = await User.find({lastName:{$regex: regex}}, 'firstName lastName image location');
-        const firstNameResults = await User.find({firstName: {$regex: regex}}, 'firstName lastName image location');
+        const lastNameResults = await User.find({ lastName: { $regex: regex } }, 'firstName lastName image location');
+        const firstNameResults = await User.find({ firstName: { $regex: regex } }, 'firstName lastName image location');
         console.log(firstNameResults);
         users = lastNameResults.concat(firstNameResults);
     } catch (err) {
         const error = new HttpError('Something went worg. Please come again later', 500);
         return next(error);
     }
-    res.json({users: users});
+    res.json({ users: users });
     console.log(users);
 };
 
@@ -37,7 +37,7 @@ const getUserById = async (req, res, next) => {
         const error = new HttpError('Something went worg. Please come again later', 500);
         return next(error);
     }
-    res.json({users: users});
+    res.json({ users: users });
 
 };
 
@@ -49,10 +49,10 @@ const signup = async (req, res, next) => {
         return next(err);
     }
 
-    const {firstName, lastName, username, email, password, gender, location, dateOfBirth, tags, image} = req.body;
+    const { firstName, lastName, username, email, password, gender, location, dateOfBirth, tags, image } = req.body;
     let existingUser, userGender, userLocation;
     try {
-        existingUser = await User.findOne({email: email});
+        existingUser = await User.findOne({ email: email });
     } catch (err) {
         const error = new HttpError('Sign up failed. Please try again later.', 500);
         return next(error);
@@ -65,7 +65,7 @@ const signup = async (req, res, next) => {
     ;
 
     try {
-        userGender = await Gender.findOne({value: gender});
+        userGender = await Gender.findOne({ value: gender });
     } catch (err) {
         const error = new HttpError("Could not find the gender.", 500);
         return next(error);
@@ -83,15 +83,15 @@ const signup = async (req, res, next) => {
             username,
             email,
             password,
-            gender:userGender,
+            gender: userGender,
             image,
-            location:userLocation,
+            location: userLocation,
             dateOfBirth,
-            // tags:userTags
+            // tags: tags
         });
         console.log(createdUser);
         await tagService.searchCreateTags(tags, createdUser, sess);
-        await createdUser.save({session:sess});
+        await createdUser.save({ session: sess });
         await sess.commitTransaction();
 
 
@@ -101,14 +101,14 @@ const signup = async (req, res, next) => {
         return next(error);
     }
 
-    res.status(201).json({status: "User registered"});
+    res.status(201).json({ status: "User registered" });
 };
 
 const login = async (req, res, next) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
     let existingUser;
     try {
-        existingUser = await User.findOne({email: email})
+        existingUser = await User.findOne({ email: email })
     } catch (err) {
         const error = new HttpError('Signing in failed. Please try again later', 500);
         return next(error);
@@ -118,7 +118,7 @@ const login = async (req, res, next) => {
         return next(error);
     }
 
-    res.json({message: 'Logged in!'});
+    res.json({ message: 'Logged in!' });
 };
 
 exports.getUser = getUsers;
