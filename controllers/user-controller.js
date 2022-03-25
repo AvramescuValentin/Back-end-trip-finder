@@ -49,7 +49,7 @@ const signup = async (req, res, next) => {
         return next(err);
     }
 
-    const { firstName, lastName, username, email, password, gender, location, dateOfBirth, tags, image } = req.body;
+    const { firstName, lastName, username, email, phone, location, password, gender, dateOfBirth, tags, image } = req.body;
     let existingUser, userGender, userLocation;
     try {
         existingUser = await User.findOne({ email: email });
@@ -75,22 +75,24 @@ const signup = async (req, res, next) => {
         const sess = await mongoose.startSession();
         sess.startTransaction();
         const userLocation = await locationService.searchCreateLocation(location, sess);
-
-        console.log(` firstName:${firstName} lastName:${lastName} username:${username} email:${email} password:${password} gender:${userGender} image:${image} location:${userLocation} dateOfBirth:${dateOfBirth} tags:${tags}`);
         const createdUser = new User({
-            firstName,
-            lastName,
-            username,
-            email,
-            password,
+            firstName: firstName,
+            lastName: lastName,
+            username: username,
+            email: email,
+            password: password,
             gender: userGender,
-            image,
+            image: image,
             location: userLocation,
-            dateOfBirth,
-            // tags: tags
+            phone: phone,
+            dateOfBirth: dateOfBirth,
+            tags: tags,
+            image: image
         });
         console.log(createdUser);
-        await tagService.searchCreateTags(tags, createdUser, sess);
+        if (tags) {
+            await tagService.searchCreateTags(tags, createdUser, sess);
+        }
         await createdUser.save({ session: sess });
         await sess.commitTransaction();
 
