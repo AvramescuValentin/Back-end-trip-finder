@@ -86,7 +86,7 @@ const signup = async (req, res, next) => {
             location: userLocation,
             phone: phone,
             dateOfBirth: dateOfBirth,
-            tags: tags,
+            tags: [],
             image: image
         });
         console.log(createdUser);
