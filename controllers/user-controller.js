@@ -47,7 +47,7 @@ const getUserById = async (req, res, next) => {
 
 const signup = async (req, res, next) => {
     const errors = validationResult(req);
-    let hashedPassword;
+    let hashedPassword, createdUser;
     if (!errors.isEmpty()) {
         const err = new HttpError('Invalid inputs passed, please check your data.', 422);
         return next(err);
@@ -75,7 +75,9 @@ const signup = async (req, res, next) => {
     }
 
     try {
-        hashedPassword = await bcrypt(password, 12);
+        console.log("plmInainte");
+        hashedPassword = await bcrypt.hash(password, 12);
+        console.log("plm");
     } catch (err) {
         const error = new HttpError("Could not create user, please try again", 500);
         return next(error);
@@ -85,7 +87,7 @@ const signup = async (req, res, next) => {
         const sess = await mongoose.startSession();
         sess.startTransaction();
         const userLocation = await locationService.searchCreateLocation(location, sess);
-        const createdUser = new User({
+        createdUser = new User({
             firstName: firstName,
             lastName: lastName,
             username: username,
@@ -133,18 +135,18 @@ const login = async (req, res, next) => {
         return next(error);
     }
     if (!existingUser) {
-        const error = HttpError('Invalid credentials.', 401);
+        const error = new HttpError('Invalid credentials.', 401);
         return next(error);
     }
     let isValidPassword;
     try {
         isValidPassword = await bcrypt.compare(password, existingUser.password);
     } catch (err) {
-        const error = HttpError('Invalid credentials.', 500);
+        const error = new HttpError('Invalid credentials.', 500);
         return next(error);
     }
     if (!isValidPassword) {
-        const error = HttpError('Invalid credentials.', 401);
+        const error = new HttpError('Invalid credentials.', 401);
         return next(error);
     }
     let token;

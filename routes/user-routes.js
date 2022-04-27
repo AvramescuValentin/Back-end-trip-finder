@@ -19,7 +19,8 @@ router.post('/signup', [
 
 router.post('/login', userControllers.login);
 
-append.use(checkAuth);
+router.use(checkAuth);
+
 router.get('/user/search/:name', userControllers.getUser);
 
 router.get('/user/:uid', userControllers.getUserById);

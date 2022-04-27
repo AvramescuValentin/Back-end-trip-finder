@@ -1,4 +1,4 @@
-const {validationResult} = require('express-validator');
+const { validationResult } = require('express-validator');
 const mongoose = require("mongoose");
 
 const HttpError = require('../models/http-error');
@@ -24,14 +24,14 @@ const getGroupById = async (req, res, next) => {
         return next(new HttpError('Could not find a group with this id', 404));
     }
 
-    res.status(201).json({group: group.toObject({getters: true})});
+    res.status(201).json({ group: group.toObject({ getters: true }) });
 };
 
 const getGroupsByUserId = async (req, res, next) => {
     const userId = req.params.uid;
     let group;
     try {
-        group = await Group.find({creator: userId});
+        group = await Group.find({ creator: userId });
         console.log(group);
     } catch (err) {
         const error = new HttpError('Fetching groups failed. Please try again later.', 500);
@@ -43,7 +43,7 @@ const getGroupsByUserId = async (req, res, next) => {
         return next(new HttpError('Could not find a group with provided user id', 404));
     }
 
-    res.status(201).json({group: group.map(group => group.toObject({getters: true}))});
+    res.status(201).json({ group: group.map(group => group.toObject({ getters: true })) });
 };
 
 const createGroup = async (req, res, next) => {
@@ -53,7 +53,7 @@ const createGroup = async (req, res, next) => {
         console.log(errors);
         return next(new HttpError('Invalid inputs passed, please check your data.', 422));
     }
-    const {title, description, image, location, tags, tripDate, creator} = req.body;
+    const { title, description, image, location, tags, tripDate, creator } = req.body;
     // const createdGroup = new Group({
     //     title,
     //     description,
@@ -87,17 +87,17 @@ const createGroup = async (req, res, next) => {
             title,
             description,
             image,
-            location:groupLocation,
+            location: groupLocation,
             // tags,
-            creator:user,
+            creator: user,
             tripDate,
             // members
         });
-        await tagService.searchCreateTags(tags,createdGroup,sess);
+        await tagService.searchCreateTags(tags, createdGroup, sess);
         createdGroup.members.push(user);
-        await createdGroup.save({session: sess}); //aici am stocat temporar grupul
+        await createdGroup.save({ session: sess }); //aici am stocat temporar grupul
         user.groups.push(createdGroup);
-        await user.save({session: sess});
+        await user.save({ session: sess });
         await sess.commitTransaction(); // aici se salveaza tot. Daca ceva merge prost pana aici, se da drop automat
     } catch (err) {
         console.log(err);
@@ -109,20 +109,20 @@ const createGroup = async (req, res, next) => {
     ;
 
 
-    res.status(201).json({status: "Group created with success!"});
+    res.status(201).json({ status: "Group created with success!" });
 
     console.log('New group created!');
 };
 
 const updateGroup = async (req, res, next) => {
-    const {title, description} = req.body;
+    const { title, description } = req.body;
     const groupId = req.params.pid;
 
     let group;
     try {
         group = await Group.findById(groupId);
     } catch (err) {
-        const error = HttpError('Something went wrong. Please try again later', 500);
+        const error = new HttpError('Something went wrong. Please try again later', 500);
         return next(error);
     }
 
@@ -136,7 +136,7 @@ const updateGroup = async (req, res, next) => {
         return next(error);
     }
 
-    res.status(200).json({group: group.toObject({getters: true})});
+    res.status(200).json({ group: group.toObject({ getters: true }) });
 };
 
 const deleteGroup = async (req, res, next) => {
@@ -157,16 +157,16 @@ const deleteGroup = async (req, res, next) => {
     try {
         const sess = await mongoose.startSession();
         sess.startTransaction();
-        await group.remove({session: sess});
+        await group.remove({ session: sess });
         group.creator.groups.pull(group);
-        await group.creator.save({session: sess});
+        await group.creator.save({ session: sess });
         await sess.commitTransaction();
     } catch (err) {
         console.log(err);
         const error = new HttpError('Could not delete the group now. Please try again later', 500);
         return next(error);
     }
-    res.status(200).json({message: "data deleted!"});
+    res.status(200).json({ message: "data deleted!" });
 };
 
 exports.getGroupById = getGroupById;
