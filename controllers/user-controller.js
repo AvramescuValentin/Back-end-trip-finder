@@ -9,8 +9,9 @@ const User = require('../models/user');
 const Gender = require('../models/gender');
 // const Location = require('../models/location');
 // const Tags = require('../models/tags');
-const locationService = require('../data_service/location-service');
-const tagService = require('../data_service/tags-service');
+const locationService = require('../services/data/location-service');
+const tagService = require('../services/data/tags-service');
+const cloudinaryTools = require("./../services/files/cloudinaryTools");
 
 
 const getUsers = async (req, res, next) => {
@@ -75,12 +76,19 @@ const signup = async (req, res, next) => {
     }
 
     try {
-        console.log("plmInainte");
         hashedPassword = await bcrypt.hash(password, 12);
-        console.log("plm");
     } catch (err) {
         const error = new HttpError("Could not create user, please try again", 500);
         return next(error);
+    }
+
+    if (image) {
+        try {
+            imageUrl = await cloudinaryTools.uploadImage(image);
+        } catch (err) {
+            const error = new HttpError("Could not upload the profile picture", 500);
+            return next(error);
+        }
     }
 
     try {
@@ -99,7 +107,7 @@ const signup = async (req, res, next) => {
             phone: phone,
             dateOfBirth: dateOfBirth,
             tags: [],
-            image: image
+            image: imageUrl
         });
         console.log(createdUser);
         if (tags) {

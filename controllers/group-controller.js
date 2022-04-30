@@ -4,8 +4,8 @@ const mongoose = require("mongoose");
 const HttpError = require('../models/http-error');
 const Group = require('../models/group');
 const User = require('../models/user');
-const locationService = require('../data_service/location-service');
-const tagService = require('../data_service/tags-service');
+const locationService = require('../services/data/location-service');
+const tagService = require('../services/data/tags-service');
 
 
 const getGroupById = async (req, res, next) => {
