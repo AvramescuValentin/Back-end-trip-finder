@@ -11,7 +11,80 @@ const Gender = require('../models/gender');
 // const Tags = require('../models/tags');
 const locationService = require('../services/data/location-service');
 const tagService = require('../services/data/tags-service');
+const userService = require('./../services/data/user-service');
 const cloudinaryTools = require("./../services/files/cloudinaryTools");
+
+
+const getProfile = async (req, res, next) => {
+    const userId = req.userData.userId;
+    let user;
+    try {
+        user = await User.findById(userId).populate('gender').populate('groups').populate('tags').populate('location');
+    } catch (err) {
+        const error = new HttpError("Could not retrieve the user. Please try again", 500);
+        return next(error);
+    }
+    if (!user) {
+        const error = new HttpError("This user does not exist. Please check the id", 404);
+        return next(error);
+    }
+    const parsedUser = userService.translateUser(user);
+    res.json({ user: parsedUser });
+}
+
+const patchProfile = async (req, res, next) => {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    const userId = req.userData.userId;
+    let user, userGender;
+    try {
+        user = await User.findById(userId);
+    } catch (err) {
+        const error = new HttpError("Could not retrieve user. Please try again later", 500);
+        return next(error);
+    }
+    user.firstName = req.body.firstName;
+    user.lastName = req.body.lastName;
+    user.phone = req.body.phone;
+    user.email = req.body.email;
+    if (req.body.gender) {
+        try {
+            user.gender = await Gender.findOne({ value: req.body.gender });
+        } catch (err) {
+            const error = new HttpError("Could not find the gender.", 500);
+            return next(error);
+        }
+    }
+
+    if (req.body.location) {
+        try {
+            const location = req.body.location;
+            user.location = await locationService.searchCreateLocation(location, sess);
+        } catch (err) {
+            const error = new HttpError("Could not find and create the location.", 500);
+            return next(error);
+        }
+    }
+
+    if (req.body.image) {
+        try {
+            user.image = await cloudinaryTools.uploadImage(req.body.image);
+        } catch (err) {
+            const error = new HttpError("Could not upload the profile picture", 500);
+            return next(error);
+        }
+    }
+    try {
+        await user.save({ session: sess });
+        await sess.commitTransaction();
+    } catch (err) {
+        const error = new HttpError('Updating the user failed. Please try again later', 500);
+        return next(error);
+    }
+
+    res.status(200).json({ user: user });
+
+};
 
 
 const getUsers = async (req, res, next) => {
@@ -168,6 +241,8 @@ const login = async (req, res, next) => {
     res.json({ message: 'Logged in!', userId: existingUser.id, token: token });
 };
 
+exports.getProfile = getProfile;
+exports.patchProfile = patchProfile;
 exports.getUser = getUsers;
 exports.getUserById = getUserById;
 exports.signup = signup;

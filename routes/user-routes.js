@@ -25,5 +25,8 @@ router.get('/user/search/:name', userControllers.getUser);
 
 router.get('/user/:uid', userControllers.getUserById);
 
+router.get('/profile', userControllers.getProfile);
+
+router.patch('/profile', userControllers.patchProfile);
 
 module.exports = router;
