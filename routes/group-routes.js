@@ -15,7 +15,11 @@ router.get('/user/:uid', groupControllers.getGroupsByUserId);
 router.post('/', [
     check('title').not().isEmpty(),
     check('description').isLength({ min: 5 }),
-    check('location').notEmpty()
+    check('location').notEmpty(),
+    check('isPrivate').notEmpty(),
+    check('startDate').notEmpty(),
+    check('endDate').notEmpty(),
+
 ], groupControllers.createGroup);
 
 router.patch('/:pid', groupControllers.updateGroup);

@@ -1,11 +1,13 @@
 const { validationResult } = require('express-validator');
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const HttpError = require('../models/http-error');
 const Group = require('../models/group');
 const User = require('../models/user');
 const locationService = require('../services/data/location-service');
 const tagService = require('../services/data/tags-service');
+const cloudinaryTools = require("./../services/files/cloudinaryTools");
 
 
 const getGroupById = async (req, res, next) => {
@@ -47,71 +49,66 @@ const getGroupsByUserId = async (req, res, next) => {
 };
 
 const createGroup = async (req, res, next) => {
-    let user;
-    const errors = validationResult(req); // valideaza componentele din req inainte de a trece mai departe si returneaza erori
-    if (!errors.isEmpty()) { // daca nu e gol, i.e. exista erori, vom da throw la o eroare http
-        console.log(errors);
-        return next(new HttpError('Invalid inputs passed, please check your data.', 422));
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const err = new HttpError('Invalid inputs passed, please check your data.', 422);
+        return next(err);
     }
-    const { title, description, image, location, tags, tripDate, creator } = req.body;
-    // const createdGroup = new Group({
-    //     title,
-    //     description,
-    //     image,
-    //     location,
-    //     tags,
-    //     creator,
-    //     tripDate,
-    //     members: creator
-    // });
-    // console.log("Avem din body");
-    // console.log(createdGroup);
-
+    let user, createdGroup, hashedPassword, imageUrl;
     try {
-        user = await User.findById(creator);
+        user = await User.findById(req.userData.userId);
     } catch (err) {
-        const error = new HttpError('Creating group failed. Please try again later.', 500);
-        return next(error);
-    }
-    if (!user) {
-        const error = new HttpError('Could not find user for provided ID', 404);
+        const error = new HttpError("Could not retrieve user. Please try again later", 500);
         return next(error);
     }
 
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+
+    if (req.body.isPrivate === 'yes') {
+        try {
+            hashedPassword = await bcrypt.hash(req.body.password, 12);
+        } catch (err) {
+            const error = new HttpError("Could not create user, please try again", 500);
+            return next(error);
+        }
+    }
+
+    if (req.body.image) {
+        try {
+            imageUrl = await cloudinaryTools.uploadImage(req.body.image);
+        } catch (err) {
+            const error = new HttpError("Could not upload the profile picture", 500);
+            return next(error);
+        }
+    }
+
     try {
-        // await createdGroup.save();
-        const sess = await mongoose.startSession();
-        sess.startTransaction();
-        const groupLocation = await locationService.searchCreateLocation(location, sess);
-        const createdGroup = new Group({
-            title,
-            description,
-            image,
+        const groupLocation = await locationService.searchCreateLocation(req.body.location, sess);
+        createdGroup = new Group({
+            title: req.body.title,
+            description: req.body.description,
+            generatedId: `${Date.now()}`,
+            isPrivate: req.body.isPrivate,
+            password: hashedPassword,
+            imageUrl: imageUrl,
             location: groupLocation,
-            // tags,
+            tags: [],
+            tripDateStart: req.body.startDate,
+            tripDateEnd: req.body.endDate,
             creator: user,
-            tripDate,
-            // members
-        });
-        await tagService.searchCreateTags(tags, createdGroup, sess);
-        createdGroup.members.push(user);
-        await createdGroup.save({ session: sess }); //aici am stocat temporar grupul
-        user.groups.push(createdGroup);
-        await user.save({ session: sess });
-        await sess.commitTransaction(); // aici se salveaza tot. Daca ceva merge prost pana aici, se da drop automat
+            members: [user]
+        })
+        if (req.body.tags) {
+            await tagService.searchCreateTags(req.body.tags, createdGroup, sess);
+        }
+        await createdGroup.save({ session: sess });
+        await sess.commitTransaction();
     } catch (err) {
-        console.log(err);
-        const error = new HttpError('Creating a new group failed. Please try again', 500);
-        return next(error); // o folosim ca sa oprim executia in caz ca intervine o eroare
-        //altfel executia va continua chiar daca primim o eroare.
-
+        const error = new HttpError('Creating a new group failed. Please try again later', 500);
+        return next(error);
     }
-    ;
-
-
-    res.status(201).json({ status: "Group created with success!" });
-
-    console.log('New group created!');
+    res.status(201).json({ status: "User registered", group: createdGroup });
 };
 
 const updateGroup = async (req, res, next) => {
