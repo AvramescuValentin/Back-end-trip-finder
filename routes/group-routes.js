@@ -8,9 +8,12 @@ const router = express.Router();
 
 router.use(checkAuth);
 
+router.get('/newsFeed', groupControllers.getGroupNewsFeed)
+
 router.get('/:pid', groupControllers.getGroupById);
 
 router.get('/user/:uid', groupControllers.getGroupsByUserId);
+
 
 router.post('/', [
     check('title').not().isEmpty(),

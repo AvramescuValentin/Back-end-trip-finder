@@ -89,25 +89,21 @@ const patchProfile = async (req, res, next) => {
 
 const getUsers = async (req, res, next) => {
     let name = req.params.name;
-    console.log(name);
     const regex = new RegExp(name, 'i');
     let users;
     try {
         const lastNameResults = await User.find({ lastName: { $regex: regex } }, 'firstName lastName image location');
         const firstNameResults = await User.find({ firstName: { $regex: regex } }, 'firstName lastName image location');
-        console.log(firstNameResults);
         users = lastNameResults.concat(firstNameResults);
     } catch (err) {
         const error = new HttpError('Something went worg. Please come again later', 500);
         return next(error);
     }
     res.json({ users: users });
-    console.log(users);
 };
 
 const getUserById = async (req, res, next) => {
     const userId = req.params.uid;
-    console.log(userId);
     let users;
     try {
         users = await User.findById(userId, 'email username');
@@ -182,7 +178,6 @@ const signup = async (req, res, next) => {
             tags: [],
             image: imageUrl
         });
-        console.log(createdUser);
         if (tags) {
             await tagService.searchCreateTags(tags, createdUser, sess);
         }

@@ -8,6 +8,7 @@ const User = require('../models/user');
 const locationService = require('../services/data/location-service');
 const tagService = require('../services/data/tags-service');
 const cloudinaryTools = require("./../services/files/cloudinaryTools");
+const groupDataService = require("./../services/data/group-service");
 
 
 const getGroupById = async (req, res, next) => {
@@ -30,23 +31,40 @@ const getGroupById = async (req, res, next) => {
 };
 
 const getGroupsByUserId = async (req, res, next) => {
-    const userId = req.params.uid;
-    let group;
+    let user, parsedGroups;
     try {
-        group = await Group.find({ creator: userId });
-        console.log(group);
+        user = await User.findById(req.userData.userId).populate('groups');
     } catch (err) {
-        const error = new HttpError('Fetching groups failed. Please try again later.', 500);
+        const error = new HttpError("Could not retrieve user. Please try again later", 500);
         return next(error);
     }
-    ;
 
-    if (group.length === 0 || !group) {
-        return next(new HttpError('Could not find a group with provided user id', 404));
+    try {
+        const groupIds = user.groups.map(group => { return group.id });
+        const groups = await Group.find({ '_id': { $in: groupIds } }).populate('location');
+        parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
     }
-
-    res.status(201).json({ group: group.map(group => group.toObject({ getters: true })) });
+    catch (err) {
+        const error = new HttpError("Could not retrieve groups. Please try again later", 500);
+        return next(error);
+    }
+    res.status(201).json({ groups: parsedGroups })
 };
+
+const getGroupNewsFeed = async (req, res, next) => {
+    let parsedGroups;
+
+    try {
+        const groups = await Group.find({ isPrivate: "no" }).populate('location');
+        parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
+    }
+    catch (err) {
+        const error = new HttpError("Could not retrieve groups. Please try again later", 500);
+        return next(error);
+    }
+    res.status(201).json({ groups: parsedGroups })
+};
+
 
 const createGroup = async (req, res, next) => {
     const errors = validationResult(req);
@@ -103,6 +121,8 @@ const createGroup = async (req, res, next) => {
             await tagService.searchCreateTags(req.body.tags, createdGroup, sess);
         }
         await createdGroup.save({ session: sess });
+        user.groups.push(createdGroup);
+        user.save({ session: sess })
         await sess.commitTransaction();
     } catch (err) {
         const error = new HttpError('Creating a new group failed. Please try again later', 500);
@@ -166,6 +186,7 @@ const deleteGroup = async (req, res, next) => {
     res.status(200).json({ message: "data deleted!" });
 };
 
+exports.getGroupNewsFeed = getGroupNewsFeed;
 exports.getGroupById = getGroupById;
 exports.getGroupsByUserId = getGroupsByUserId;
 exports.createGroup = createGroup;
