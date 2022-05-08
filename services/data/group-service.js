@@ -16,6 +16,7 @@ const transalateGroup = (group) => {
     parsedGroup.tags = group.tags.map((tag) => { return tag.value });
     parsedGroup.dateOfBirth = group.dateOfBirth;
     parsedGroup.imageUrl = group.imageUrl;
+    parsedGroup.creator = group.creator;
     return parsedGroup;
 }
 

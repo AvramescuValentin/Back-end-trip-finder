@@ -14,7 +14,8 @@ const groupSchema = new Schema({
     tripDateStart: { type: Date, required: true },
     tripDateEnd: { type: Date, required: true },
     creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User' },
-    members: [{ type: mongoose.Types.ObjectId, ref: 'User' }]
+    members: [{ type: mongoose.Types.ObjectId, ref: 'User' }],
+    isDeleted: { type: Boolean, default: false }
 
 })
 

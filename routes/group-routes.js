@@ -27,8 +27,10 @@ router.post('/', [
 
 router.post('/join/:groupId', groupControllers.applyForGroup);
 
-router.patch('/:pid', groupControllers.updateGroup);
+router.post('/leave/:groupId', groupControllers.leaveGroup);
 
-router.delete('/:pid', groupControllers.deleteGroup);
+router.patch('/:groupId', groupControllers.updateGroup);
+
+router.delete('/:groupId', groupControllers.deleteGroup);
 
 module.exports = router;

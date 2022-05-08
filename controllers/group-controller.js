@@ -42,7 +42,7 @@ const getGroupsByUserId = async (req, res, next) => {
 
     try {
         const groupIds = user.groups.map(group => { return group.id });
-        const groups = await Group.find({ '_id': { $in: groupIds } }).populate('location');
+        const groups = await Group.find({ '_id': { $in: groupIds }, isDeleted: false }).populate('location');
         parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
     }
     catch (err) {
@@ -56,7 +56,7 @@ const getGroupNewsFeed = async (req, res, next) => {
     let parsedGroups;
 
     try {
-        const groups = await Group.find({ isPrivate: "no" }).populate('location');
+        const groups = await Group.find({ isPrivate: "no", isDeleted: false }).populate('location');
         parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
     }
     catch (err) {
@@ -158,30 +158,30 @@ const updateGroup = async (req, res, next) => {
 };
 
 const deleteGroup = async (req, res, next) => {
-    const groupId = req.params.pid;
+    const groupId = req.params.groupId;
     let group;
     try {
-        group = await Group.findById(groupId).populate('creator');
+        group = await Group.findById(groupId).populate('creator').populate('members');
     } catch (err) {
         const error = new HttpError('Something went wrong. Please try again later', 500);
         return next(error);
     }
-
     if (!group) {
         const error = new HttpError("We could not found any group with this ID", 404);
         return next(error);
     }
-
-    try {
-        const sess = await mongoose.startSession();
-        sess.startTransaction();
-        await group.remove({ session: sess });
-        group.creator.groups.pull(group);
-        await group.creator.save({ session: sess });
-        await sess.commitTransaction();
-    } catch (err) {
-        console.log(err);
-        const error = new HttpError('Could not delete the group now. Please try again later', 500);
+    if (group.creator.id === req.userData.userId) {
+        try {
+            group.isDeleted = true;
+            group.save();
+        } catch (err) {
+            console.log(err);
+            const error = new HttpError('Could not delete the group now. Please try again later', 500);
+            return next(error);
+        }
+    }
+    else {
+        const error = new HttpError("The user is not the creator", 403);
         return next(error);
     }
     res.status(200).json({ message: "data deleted!" });
@@ -248,6 +248,37 @@ const applyForGroup = async (req, res, next) => {
     res.status(201).json({ message: 'User registered' })
 }
 
+const leaveGroup = async (req, res, next) => {
+    let user, group;
+
+    const groupId = req.params.groupId;
+    try {
+        group = await Group.findById(groupId);
+    } catch (err) {
+        const error = new HttpError('Could not retrieve group. Please try again later', 500);
+        return next(error);
+    }
+    try {
+        user = await User.findById(req.userData.userId);
+    } catch (err) {
+        const error = new HttpError("Could not retrieve user. Please try again later", 500);
+        return next(error);
+    }
+    try {
+        const sess = await mongoose.startSession();
+        sess.startTransaction();
+        await user.groups.pull(group);
+        await user.save({ session: sess });
+        await group.members.pull(user);
+        await group.save({ session: sess });
+        await sess.commitTransaction();
+    } catch (err) {
+        const error = new HttpError("Could not leave group. Please try again later", 500);
+        return next(error);
+    }
+    res.status(200).json({ message: "User leaved group!" });
+}
+
 exports.getGroupNewsFeed = getGroupNewsFeed;
 exports.getGroupById = getGroupById;
 exports.getGroupsByUserId = getGroupsByUserId;
@@ -255,3 +286,4 @@ exports.createGroup = createGroup;
 exports.updateGroup = updateGroup;
 exports.deleteGroup = deleteGroup;
 exports.applyForGroup = applyForGroup;
+exports.leaveGroup = leaveGroup;
