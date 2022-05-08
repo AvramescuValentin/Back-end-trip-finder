@@ -42,7 +42,7 @@ const getGroupsByUserId = async (req, res, next) => {
 
     try {
         const groupIds = user.groups.map(group => { return group.id });
-        const groups = await Group.find({ 'id': { $in: groupIds } }, { isDeleted: false }).populate('location');
+        const groups = await Group.find({ '_id': { $in: groupIds }, 'isDeleted': false }).populate('location');
         parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
     }
     catch (err) {
