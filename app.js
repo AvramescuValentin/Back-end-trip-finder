@@ -45,7 +45,7 @@ mongoose
         useUnifiedTopology: true
     })
     .then(() => { // daca am reusit sa ne connectam la baza de date pornim si serverul
-        app.listen(port, () => {
+        app.listen(process.env.PORT || port, () => {
             console.log("Server is listening on port 5000!");
         });
     })
