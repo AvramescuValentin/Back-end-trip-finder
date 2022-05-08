@@ -9,6 +9,7 @@ const locationService = require('../services/data/location-service');
 const tagService = require('../services/data/tags-service');
 const cloudinaryTools = require("./../services/files/cloudinaryTools");
 const groupDataService = require("./../services/data/group-service");
+const { param } = require('../routes/user-routes');
 
 
 const getGroupById = async (req, res, next) => {
@@ -186,9 +187,71 @@ const deleteGroup = async (req, res, next) => {
     res.status(200).json({ message: "data deleted!" });
 };
 
+const applyForGroup = async (req, res, next) => {
+    let group, user;
+    if (req.body.generatedId) {
+        try {
+            group = await Group.findOne({ generatedId: req.body.generatedId });
+        } catch (err) {
+            const error = new HttpError('Could not retrieve group. Please try again later', 500);
+            return next(error);
+        }
+    }
+    else {
+        const groupId = req.params.groupId;
+        try {
+            group = await Group.findById(groupId);
+        } catch (err) {
+            const error = new HttpError('Could not retrieve group. Please try again later', 500);
+            return next(error);
+        }
+    }
+
+    try {
+        user = await User.findById(req.userData.userId);
+    } catch (err) {
+        const error = new HttpError("Could not retrieve user. Please try again later", 500);
+        return next(error);
+    }
+
+
+    if (group.isPrivate === "no") {
+        try {
+            await groupDataService.registerUserInGroup(user, group);
+        } catch (err) {
+            const error = new HttpError("Could not add user to the group. Please try again later", 500);
+            return next(error);
+        }
+    }
+    else {
+        let isValidPassword;
+        try {
+            isValidPassword = await bcrypt.compare(req.body.password, group.password);
+        } catch (err) {
+            const error = new HttpError('Invalid credentials.', 500);
+            return next(error);
+        }
+
+        if (!isValidPassword) {
+            const error = new HttpError('Invalid credentials.', 401);
+            return next(error);
+        }
+
+        try {
+            await groupDataService.registerUserInGroup(user, group);
+        } catch (err) {
+            const error = new HttpError("Could not add user to the group. Please try again later", 500);
+            return next(error);
+        }
+
+    }
+    res.status(201).json({ message: 'User registered' })
+}
+
 exports.getGroupNewsFeed = getGroupNewsFeed;
 exports.getGroupById = getGroupById;
 exports.getGroupsByUserId = getGroupsByUserId;
 exports.createGroup = createGroup;
 exports.updateGroup = updateGroup;
 exports.deleteGroup = deleteGroup;
+exports.applyForGroup = applyForGroup;

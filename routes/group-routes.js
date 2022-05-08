@@ -25,6 +25,8 @@ router.post('/', [
 
 ], groupControllers.createGroup);
 
+router.post('/join/:groupId', groupControllers.applyForGroup);
+
 router.patch('/:pid', groupControllers.updateGroup);
 
 router.delete('/:pid', groupControllers.deleteGroup);
