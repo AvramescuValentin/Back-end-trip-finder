@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { stringify } = require('uuid');
 
 const Schema = mongoose.Schema;
 
@@ -15,7 +16,15 @@ const groupSchema = new Schema({
     tripDateEnd: { type: Date, required: true },
     creator: { type: mongoose.Types.ObjectId, required: true, ref: 'User' },
     members: [{ type: mongoose.Types.ObjectId, ref: 'User' }],
-    isDeleted: { type: Boolean, default: false }
+    isDeleted: { type: Boolean, default: false },
+    posts: [
+        {
+            timeStamp: { type: Date },
+            title: { type: String },
+            description: { type: String },
+            author: { type: String }
+        }
+    ]
 
 })
 

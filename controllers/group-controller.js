@@ -116,7 +116,8 @@ const createGroup = async (req, res, next) => {
             tripDateStart: req.body.startDate,
             tripDateEnd: req.body.endDate,
             creator: user,
-            members: [user]
+            members: [user],
+            posts: []
         })
         if (req.body.tags) {
             await tagService.searchCreateTags(req.body.tags, createdGroup, sess);
