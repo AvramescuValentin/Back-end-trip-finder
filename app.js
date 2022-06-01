@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+var cors = require('cors')
 
 const HttpError = require('./models/http-error');
 const groupRoutes = require('./routes/group-routes');
@@ -9,6 +10,8 @@ const userRoutes = require('./routes/user-routes')
 
 const port = 5000;
 const app = express();
+
+app.use(cors());
 
 app.use(bodyParser.json({ limit: '50mb' }));
 
