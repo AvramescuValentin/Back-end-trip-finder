@@ -16,8 +16,6 @@ const userSchema = new Schema({
     location: { type: mongoose.Types.ObjectId, ref: 'Location', required: true },
     dateOfBirth: { type: Date, required: true },
     tags: [{ type: mongoose.Types.ObjectId, ref: 'Tags' }],
-    rating: Number,
-    review: [{ star: Number, commentary: String }]
 });
 
 userSchema.plugin(uniqueValidator);

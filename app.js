@@ -49,10 +49,9 @@ mongoose
     })
     .then(() => { // daca am reusit sa ne connectam la baza de date pornim si serverul
         app.listen(process.env.PORT || port, () => {
-            console.log("Server is listening on port 5000!");
+            console.log(`Server is listening on port ${process.env.PORT ? process.env.PORT : port}!`);
         });
     })
     .catch(err => {
         console.log(err); //altfel vom returna o eroare
     });
-

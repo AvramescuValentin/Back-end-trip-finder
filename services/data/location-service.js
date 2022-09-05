@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const LocationService = require('../../models/location');
 
 const searchCreateLocation = async (obj, sess) => {
-    // const location = JSON.parse(obj);
+
     const location = obj;
     let createdLocation;
     try {

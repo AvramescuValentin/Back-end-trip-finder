@@ -1,11 +1,11 @@
 const express = require("express");
 const { check } = require('express-validator');
-const { append } = require("express/lib/response");
 
 const userControllers = require('../controllers/user-controller');
 const checkAuth = require('../middleware/check-auth');
 
 const router = express.Router();
+
 router.post('/signup', [
     check('firstName').notEmpty(),
     check('lastName').notEmpty(),

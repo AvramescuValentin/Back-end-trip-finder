@@ -56,14 +56,15 @@ const getGroupNewsFeed = async (req, res, next) => {
     let parsedGroups;
 
     try {
-        const groups = await Group.find({ isPrivate: "no", isDeleted: false }).populate('location');
+        const groups = await Group.find({ isPrivate: "no", isDeleted: false }).populate('location').lean();
         parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
     }
     catch (err) {
         const error = new HttpError("Could not retrieve groups. Please try again later", 500);
         return next(error);
     }
-    res.status(201).json({ groups: parsedGroups })
+    const reversedGroupArray = parsedGroups.reverse();
+    res.status(201).json({ groups: reversedGroupArray })
 };
 
 
