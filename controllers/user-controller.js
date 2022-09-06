@@ -117,7 +117,7 @@ const getUserById = async (req, res, next) => {
 
 const signup = async (req, res, next) => {
     const errors = validationResult(req);
-    let hashedPassword, createdUser;
+    let hashedPassword, createdUser, imageUrl;
     if (!errors.isEmpty()) {
         const err = new HttpError('Invalid inputs passed, please check your data.', 422);
         return next(err);
@@ -171,12 +171,11 @@ const signup = async (req, res, next) => {
             email: email,
             password: hashedPassword,
             gender: userGender,
-            image: image,
             location: userLocation,
             phone: phone,
             dateOfBirth: dateOfBirth,
             tags: [],
-            image: imageUrl
+            image: imageUrl || null
         });
         if (tags) {
             await tagService.searchCreateTags(tags, createdUser, sess);

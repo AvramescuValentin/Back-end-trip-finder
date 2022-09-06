@@ -56,7 +56,7 @@ const getGroupNewsFeed = async (req, res, next) => {
     let parsedGroups;
 
     try {
-        const groups = await Group.find({ isPrivate: "no", isDeleted: false }).populate('location').lean();
+        const groups = await Group.find({ isPrivate: "no", isDeleted: false }).populate('location');
         parsedGroups = groups.map(group => { return groupDataService.transalateGroup(group) });
     }
     catch (err) {
