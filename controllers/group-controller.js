@@ -111,7 +111,7 @@ const createGroup = async (req, res, next) => {
             generatedId: `${Date.now()}`,
             isPrivate: req.body.isPrivate,
             password: hashedPassword,
-            imageUrl: imageUrl,
+            imageUrl: imageUrl || null,
             location: groupLocation,
             tags: [],
             tripDateStart: req.body.startDate,
